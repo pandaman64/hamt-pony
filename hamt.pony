@@ -10,13 +10,13 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
     let children: Array[(HAMTNode[K, V] val | None)] val
 
     new create(k: (K | None), v: (V | None), c: Array[(HAMTNode[K, V] val | None)] val) =>
-        key = consume k
-        value = consume v
+        key = k
+        value = v
         children = c
 
     new with_kv(k: K, v: V) =>
-        key = consume k
-        value = consume v
+        key = k
+        value = v
         children = recover Array[(HAMTNode[K, V] val | None)].init(None, 1 << 6) end
 
     new empty() =>
@@ -24,18 +24,18 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
         value = None
         children = recover Array[(HAMTNode[K, V] val | None)].init(None, 1 << 6) end
 
-    fun val insert(index: U64, k: K, v: V): HAMTNode[K, V] val =>
+    fun insert(index: U64, k: K, v: V): HAMTNode[K, V] iso^ =>
         match key
-        | None if index == 0 => recover HAMTNode[K, V](consume k, consume v, children) end
-        | let here: K if (index == 0) and (k == here) => recover HAMTNode[K, V](consume k, consume v, children) end
+        | None if index == 0 => recover HAMTNode[K, V](k, v, children) end
+        | let here: K if (index == 0) and (k == here) => recover HAMTNode[K, V](k, v, children) end
         | let here: (K | None) =>
             try
                 let head = index and ((1 << 6) - 1)
                 let tail = index >> 6
                 let c = recover iso children.clone() end
                 match c(head.usize())?
-                | None => c(head.usize())? = (recover val HAMTNode[K, V].empty() end).insert(tail, consume k, consume v)
-                | let node: HAMTNode[K, V] val => c(head.usize())? = node.insert(tail, consume k, consume v)
+                | None => c(head.usize())? = recover HAMTNode[K, V].empty().insert(tail, k, v) end
+                | let node: HAMTNode[K, V] val => c(head.usize())? = recover node.insert(tail, k, v) end
                 end
                 recover HAMTNode[K, V](here, value, consume c) end
             else
@@ -45,7 +45,7 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
             end
         end
 
-    fun val get(index: U64, k: K): (V | None) =>
+    fun get(index: U64, k: K): (V | None) =>
         match key
         | None if index == 0 => None
         | let here: K if (index == 0) and (here == k) => value
@@ -55,7 +55,7 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 let tail = index >> 6
                 match children(head.usize())?
                 | None => None
-                | let node: HAMTNode[K, V] val => node.get(tail, consume k)
+                | let node: HAMTNode[K, V] val => node.get(tail, k)
                 end
             else
                 // we know this will never happen
@@ -90,10 +90,10 @@ class val HAMT[K: Equatable[K] val, V: Any val, H: HashFunction[K] val]
         count = c
 
     fun val insert(k: K, v: V): HAMT[K, V, H] val =>
-        recover HAMT[K, V, H].init(root.insert(H.hash(k), consume k, consume v), count + 1) end
+        recover HAMT[K, V, H].init(root.insert(H.hash(k), k, v), count + 1) end
 
     fun val get(k: K): (V | None) =>
-        root.get(H.hash(k), consume k)
+        root.get(H.hash(k), k)
 
     fun val get_root(): HAMTNode[K, V] val =>
         root
@@ -114,3 +114,4 @@ actor Main
         env.out.print(d.get("hige").string())
         env.out.print(d.get("hege").string())
         env.out.print(d.get("hage").string())
+
