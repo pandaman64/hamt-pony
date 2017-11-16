@@ -1,4 +1,3 @@
-use "debug"
 use "collections"
 
 class Bitmap
@@ -11,7 +10,6 @@ class Bitmap
         (value and (1 << index)) != 0
 
     fun array_index(index: U64): USize =>
-        Debug.out(index.string())
         var ret: USize = 0
         var i: U64 = 0
         while i < index do
@@ -24,9 +22,6 @@ class Bitmap
 
     fun add(v: U64): Bitmap iso^ =>
         recover Bitmap(value or (1 << v)) end
-
-interface Visitor[K, V]
-    fun apply(k: K, v: V)
 
 class val HAMTNode[K: Equatable[K] val, V: Any val]
     let key: (K | None)
@@ -61,9 +56,6 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 let head = index and ((1 << 6) - 1)
                 let tail = index >> 6
 
-                Debug.out("head:" + head.string())
-                Debug.out("tail:" + tail.string())
-
                 var b = bitmap
                 let c = recover iso children.clone() end
 
@@ -78,7 +70,7 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 recover HAMTNode[K, V](here, value, b, consume c) end
             else
                 // we know this will never happen
-                Debug.out("Array subscription failed. This must not happen")
+                // Debug.out("Array subscription failed. This must not happen")
                 recover HAMTNode[K, V].empty() end
             end
         end
@@ -92,9 +84,6 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 let head = index and ((1 << 6) - 1)
                 let tail = index >> 6
 
-                Debug.out("head:" + head.string())
-                Debug.out("tail:" + tail.string())
-
                 if bitmap.exists(head) then
                     children(bitmap.array_index(head))?.get(tail, k)
                 else
@@ -102,7 +91,7 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 end
             else
                 // we know this will never happen
-                Debug.out("Array subscription failed. This must not happen")
+                // Debug.out("Array subscription failed. This must not happen")
                 None
             end
         end
@@ -137,16 +126,7 @@ type HAMTIs[K: Equatable[K] val, V: Any val] is HAMT[K, V, HashIs[K]]
 
 actor Main
     new create(env: Env) =>
-        let a = recover val HAMTIs[String, I32] end
-        let b = recover val a.insert("hoge", 100) end
-        let c = recover val b.insert("hige", 200) end
-        let d = recover val c.insert("hage", 300) end
+        let map = recover val HAMTIs[String, I32].insert("foo", 100).insert("bar", 200).insert("baz", 300) end
 
-        let root = d.get_root()
-        root.visit({(s: String, x: Int) => env.out.print(s + ":" + x.string()) })
-
-        env.out.print(d.get("hoge").string())
-        env.out.print(d.get("hige").string())
-        env.out.print(d.get("hege").string())
-        env.out.print(d.get("hage").string())
+        env.out.print(map.get("bar").string())
 
