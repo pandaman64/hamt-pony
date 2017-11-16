@@ -46,7 +46,7 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
         end
 
     fun val get(index: U64, k: K): (V | None) =>
-        match value
+        match key
         | None if index == 0 => None
         | let here: K if (index == 0) and (here == k) => value
         | let here: (K | None) =>
