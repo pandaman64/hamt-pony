@@ -98,6 +98,14 @@ class val HAMT[K: Equatable[K] val, V: Any val, H: HashFunction[K] val]
     fun get_root(): HAMTNode[K, V] val =>
         root
 
+    fun apply(k: K): V ? =>
+        match get(k)
+        | None => error
+        | let v: V => v
+        end
+
+    fun size(): USize => count
+
 type HAMTIs[K: Equatable[K] val, V: Any val] is HAMT[K, V, HashIs[K]]
 
 actor Main
