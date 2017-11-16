@@ -14,9 +14,14 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
         value = consume v
         children = c
 
-    new with_kv(k: (K | None), v: (V | None)) =>
+    new with_kv(k: K, v: V) =>
         key = consume k
         value = consume v
+        children = recover Array[(HAMTNode[K, V] val | None)].init(None, 1 << 6) end
+
+    new empty() =>
+        key = None
+        value = None
         children = recover Array[(HAMTNode[K, V] val | None)].init(None, 1 << 6) end
 
     fun val insert(index: U64, k: K, v: V): HAMTNode[K, V] val =>
@@ -29,14 +34,14 @@ class val HAMTNode[K: Equatable[K] val, V: Any val]
                 let tail = index >> 6
                 let c = recover iso children.clone() end
                 match c(head.usize())?
-                | None => c(head.usize())? = (recover val HAMTNode[K, V].with_kv(None, None) end).insert(tail, consume k, consume v)
+                | None => c(head.usize())? = (recover val HAMTNode[K, V].empty() end).insert(tail, consume k, consume v)
                 | let node: HAMTNode[K, V] val => c(head.usize())? = node.insert(tail, consume k, consume v)
                 end
                 recover HAMTNode[K, V](here, value, consume c) end
             else
                 // we know this will never happen
                 Debug.out("Array subscription failed. This must not happen")
-                recover HAMTNode[K, V](None, None, recover Array[(HAMTNode[K, V] val | None)] end) end
+                recover HAMTNode[K, V].empty() end
             end
         end
 
@@ -77,7 +82,7 @@ class val HAMT[K: Equatable[K] val, V: Any val, H: HashFunction[K] val]
     let count: USize
 
     new create() =>
-        root = recover HAMTNode[K, V].with_kv(None, None) end
+        root = recover HAMTNode[K, V].empty() end
         count = 0
 
     new init(r: HAMTNode[K, V] val, c: USize) =>
