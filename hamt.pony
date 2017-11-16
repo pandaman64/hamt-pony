@@ -89,13 +89,13 @@ class val HAMT[K: Equatable[K] val, V: Any val, H: HashFunction[K] val]
         root = r
         count = c
 
-    fun val insert(k: K, v: V): HAMT[K, V, H] val =>
+    fun insert(k: K, v: V): HAMT[K, V, H] val =>
         recover HAMT[K, V, H].init(root.insert(H.hash(k), k, v), count + 1) end
 
-    fun val get(k: K): (V | None) =>
+    fun get(k: K): (V | None) =>
         root.get(H.hash(k), k)
 
-    fun val get_root(): HAMTNode[K, V] val =>
+    fun get_root(): HAMTNode[K, V] val =>
         root
 
 type HAMTIs[K: Equatable[K] val, V: Any val] is HAMT[K, V, HashIs[K]]
